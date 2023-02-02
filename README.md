@@ -10,5 +10,20 @@ Readable function
 
 Rightful Constants
 
-Method delegation for file hashing.
+Identify methods to be extracted
 
+
+
+**Clean Code mission 2**
+
+Handling Errors
+
+Fixing Function arguments
+
+
+
+**Clean Code mission 3**
+
+Interface Extractuib
+
+Factory Pattern
