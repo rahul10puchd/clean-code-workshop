@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"log"
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -53,6 +56,7 @@ func TestToReadableSizeMultipleApproachTwo(t *testing.T) {
 		{"megabyte_return", 1988909, "1 MB"},
 		{"gigabyte_return", 29121988909, "29 GB"},
 		{"gigabyte_return", 890929121988909, "890 TB"},
+		{"byte_return", 1000, "1000 B"},
 	}
 
 	for _, tc := range tt {
@@ -99,3 +103,91 @@ var _ = Describe("Main", func() {
 	})
 
 })
+
+func Test_traverseDir(t *testing.T) {
+	type args struct {
+		hashes     map[string]string
+		duplicates map[string]string
+		dupeSize   *int64
+		entries    []os.FileInfo
+		directory  string
+	}
+	type output struct {
+		lengthOfhashes     int
+		lengthOfduplicates int
+		expectedpanic      bool
+	}
+	tests := []struct {
+		name           string
+		args           args
+		expectedResult output
+	}{
+		{
+			name: "traverseDir-Test-1-Pass",
+			args: args{
+				hashes:     map[string]string{},
+				duplicates: map[string]string{},
+				dupeSize:   new(int64),
+				entries:    []os.FileInfo{},
+				directory:  "duplicates_files_directory",
+			},
+			expectedResult: output{
+				lengthOfhashes:     2,
+				lengthOfduplicates: 2,
+			},
+		},
+		{
+			name: "traverseDir-Test-2-Pass",
+			args: args{
+				hashes:     map[string]string{},
+				duplicates: map[string]string{},
+				dupeSize:   new(int64),
+				entries:    []os.FileInfo{},
+				directory:  "/Users/rahul/thoughtworks/clean-code-workshop",
+			},
+			expectedResult: output{
+				lengthOfhashes:     33,
+				lengthOfduplicates: 3,
+			},
+		},
+		{
+			name: "traverseDir-Test-3-Fail",
+			args: args{
+				hashes:     map[string]string{},
+				duplicates: map[string]string{},
+				dupeSize:   new(int64),
+				entries:    []os.FileInfo{},
+				directory:  "",
+			},
+			expectedResult: output{
+				lengthOfhashes:     0,
+				lengthOfduplicates: 0,
+				expectedpanic:      false,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.expectedResult.expectedpanic {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Errorf("The code did not panic")
+					}
+				}()
+				traverseDir(tt.args.hashes, tt.args.duplicates, tt.args.dupeSize, tt.args.entries, tt.args.directory)
+			}
+			//var err error
+			tt.args.entries, _ = ioutil.ReadDir(tt.args.directory)
+			// if err != nil {
+			// 	panic(err)
+			// }
+			traverseDir(tt.args.hashes, tt.args.duplicates, tt.args.dupeSize, tt.args.entries, tt.args.directory)
+			lengthOfHashed := len(tt.args.hashes)
+			lengthOfDuplicates := len(tt.args.duplicates)
+			log.Println("tt.args.dupeSize", tt.args.dupeSize)
+			if lengthOfHashed != tt.expectedResult.lengthOfhashes || lengthOfDuplicates != tt.expectedResult.lengthOfduplicates {
+				t.Errorf("input %v, unexpected output:\nlengthOfHashed: %d\nlengthOfDuplicates: %d", tt.args, lengthOfHashed, lengthOfDuplicates)
+			}
+		})
+	}
+}
